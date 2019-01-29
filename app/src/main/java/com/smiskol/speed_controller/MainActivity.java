@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        final MediaPlayer mMediaPlayer; //play a little tune
+        final MediaPlayer mMediaPlayer; //play a little tune ;)
         mMediaPlayer = MediaPlayer.create(this, R.raw.ghost_riders);
         mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
