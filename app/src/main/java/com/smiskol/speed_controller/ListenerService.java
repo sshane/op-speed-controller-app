@@ -1,13 +1,9 @@
 package com.smiskol.speed_controller;
 
 import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioTrack;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
@@ -17,8 +13,6 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.KeyEvent;
 import android.widget.Toast;
-
-import java.util.List;
 
 public class ListenerService extends Service {
 
