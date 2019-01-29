@@ -5,3 +5,5 @@
 #### If you would like to install the app without compiling yourself, a debugging apk can be found by clicking [here](https://github.com/ShaneSmiskol/op-speed-controller/blob/master/app-debug.apk?raw=true).
 
 Note: This app is a work-in-progress. It is not finished.
+
+https://github.com/commaai/openpilot
