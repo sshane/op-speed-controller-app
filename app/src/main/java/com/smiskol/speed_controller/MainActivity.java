@@ -40,10 +40,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity {
-    List<String> myList;
-    Thread listenerThread;
-    Boolean alreadyRunning = false;
-    //MediaButtonIntentReceiver r;
+
     private boolean mIsInForegroundMode;
 
     @Override
@@ -54,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                 1);
-        //buttonListener();
 
         Switch switch1 = findViewById(R.id.switch1);
         final TextView textView1 = findViewById(R.id.textView1);
@@ -87,13 +83,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        //startService(new Intent(this, ListenerService.class));
-
-        //startListener(findViewById(R.id.button));
-
-        final MediaPlayer mMediaPlayer;
-        mMediaPlayer = MediaPlayer.create(this, R.raw.silence);
+        final MediaPlayer mMediaPlayer; //play a little tune
+        mMediaPlayer = MediaPlayer.create(this, R.raw.ghost_riders);
         mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
@@ -101,41 +92,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         mMediaPlayer.start();
-        /*
-        MediaSession.Callback callback = new MediaSession.Callback() {
-            @Override
-            public void onPlay() {
-
-            }
-
-            @Override
-            public boolean onMediaButtonEvent(Intent mediaButtonIntent) {
-                Toast.makeText(MainActivity.this, "Success!", Toast.LENGTH_SHORT).show();
-                if (!mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.pause();
-                } else {
-                    mMediaPlayer.start();
-                }
-                return true;
-            }
-        };
-        MediaSession mediaSession = new MediaSession(this,
-                "f"); // Debugging tag, any string
-        mediaSession.setFlags(
-                MediaSession.FLAG_HANDLES_MEDIA_BUTTONS |
-                        MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
-        mediaSession.setCallback(callback);
-
-
-        PlaybackState state = new PlaybackState.Builder()
-                .setActions(PlaybackState.ACTION_FAST_FORWARD | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PLAY_PAUSE | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS | PlaybackState.ACTION_STOP)
-                .setState(PlaybackState.STATE_PLAYING, 0, 1, SystemClock.elapsedRealtime())
-                .build();
-        mediaSession.setPlaybackState(state);
-
-// Call this when you start playback after receiving audio focus
-        mediaSession.setActive(true);*/
-
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
@@ -153,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Listener Notification";
-            String description = "This is a notification to make sure the listener never gets closed by the system.";
-            int importance = NotificationManager.IMPORTANCE_HIGH;
+            String description = "This is a notification to make sure the Bluetooth listener never gets closed by the system.";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel("1", name, importance);
             channel.setDescription(description);
             // Register the channel with the system; you can't change the importance
@@ -176,75 +132,8 @@ public class MainActivity extends AppCompatActivity {
         mIsInForegroundMode = true;
     }
 
-
-    /*@Override
-    protected void onStop()
-    {
-        unregisterReceiver(r);
-        super.onStop();
-    }*/
-
-    public void startListener(View view) {
-        /*IntentFilter filter = new IntentFilter(Intent.ACTION_MEDIA_BUTTON);
-        filter.setPriority(999999);
-        r = new MediaButtonIntentReceiver();
-        registerReceiver(r, filter);*/
-
-
-        MediaSession ms = new MediaSession(getApplicationContext(), getPackageName());
-        ms.setActive(true);
-
-        ms.setCallback(new MediaSession.Callback() {
-            @Override
-            public boolean onMediaButtonEvent(Intent mediaButtonIntent) {
-                KeyEvent keyEvent = (KeyEvent) mediaButtonIntent.getExtras().get(Intent.EXTRA_KEY_EVENT);
-                if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-                    switch (keyEvent.getKeyCode()) {
-                        case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                            if (mIsInForegroundMode) {
-                                makeSnackbar("Play/Pause");
-                            } else {
-                                Toast.makeText(MainActivity.this, "Play/Pause", Toast.LENGTH_SHORT).show();
-                            }
-                            break;
-
-                        case KeyEvent.KEYCODE_MEDIA_NEXT:
-                            if (mIsInForegroundMode) {
-                                makeSnackbar("Next");
-                            } else {
-                                Toast.makeText(MainActivity.this, "Next", Toast.LENGTH_SHORT).show();
-                            }
-                            break;
-
-                        case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
-                            if (mIsInForegroundMode) {
-                                makeSnackbar("Previous");
-                            } else {
-                                Toast.makeText(MainActivity.this, "Previous", Toast.LENGTH_SHORT).show();
-                            }
-                            break;
-                    }
-                }
-                return super.onMediaButtonEvent(mediaButtonIntent);
-            }
-        });
-        Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
-        PendingIntent mediaButtonReceiverPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, mediaButtonIntent, 0);
-        // you can button by receiver after terminating your app
-        ms.setMediaButtonReceiver(mediaButtonReceiverPendingIntent);
-
-        // play dummy audio
-        AudioTrack at = new AudioTrack(AudioManager.STREAM_MUSIC, 48000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT,
-                AudioTrack.getMinBufferSize(48000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT), AudioTrack.MODE_STREAM);
-        at.play();
-
-        // a little sleep
-        at.stop();
-        at.release();
-    }
-
     public void connectSSH() {
-        String eonIP = "192.168.1.32";
+        String eonIP = "192.168.1.32"; //soon to be inputtable by user
         writePrivateKeyFile();
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 
@@ -266,7 +155,6 @@ public class MainActivity extends AppCompatActivity {
             //ByteArrayOutputStream baos = new ByteArrayOutputStream();
             //channelssh.setOutputStream(baos);
 
-
             //channelssh.setCommand("cd /data/HELLOTHERE; mkdir ITSFINALLYWORKING");
             channelssh.connect();
             channelssh.disconnect();
@@ -274,15 +162,13 @@ public class MainActivity extends AppCompatActivity {
 
             //return baos.toString();
         } catch (Exception e) {
-            Toast.makeText(this, "Can't connect to EON." +
-                    "", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Can't connect to EON.", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
     }
 
     public void writePrivateKeyFile() {
         try {
-            // catches IOException below
             String privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
                     "MIIEogIBAAKCAQEAvol16t9E6vieTSmrdylhws3JsGeeZxoeloIAKhAmuQmrAZTP\n" +
                     "VXkTqVbt23gPuYdDIm0YGw+AzLVVwbeoBL2fJ3dOBO3iwPS02chQ2e0pEjlY+KFz\n" +
@@ -311,20 +197,13 @@ public class MainActivity extends AppCompatActivity {
                     "2trgYpUlSBLIOmPNxonJIfnozphLGOnKNe0RWgGR8BnwhRYzu+k=\n" +
                     "-----END RSA PRIVATE KEY-----\n";
 
-            /* We have to use the openFileOutput()-method
-             * the ActivityContext provides, to
-             * protect your file from others and
-             * This is done for security-reasons.
-             * We chose MODE_WORLD_READABLE, because
-             *  we have nothing to hide in our file */
+
             File file = new File(getFilesDir(), "eon_id.ppk");
             if (!file.exists() || file.length() == 0) {
                 FileOutputStream fOut = new FileOutputStream(file);
                 OutputStreamWriter osw = new OutputStreamWriter(fOut);
                 Toast.makeText(this, file.getAbsolutePath(), Toast.LENGTH_SHORT).show();
 
-
-                // Write the string to the file
                 osw.write(privateKey);
 
                 osw.close();
@@ -332,78 +211,6 @@ public class MainActivity extends AppCompatActivity {
 
         } catch (IOException ioe) {
             ioe.printStackTrace();
-        }
-    }
-
-
-    public void buttonListener() {
-        myList = new ArrayList<>();
-        try {
-            Process process = Runtime.getRuntime().exec("logcat -c");
-        } catch (Exception e) {
-
-        }
-
-        listenerThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Process process = Runtime.getRuntime().exec("logcat -d");
-                        BufferedReader bufferedReader = new BufferedReader(
-                                new InputStreamReader(process.getInputStream()));
-
-                        StringBuilder log = new StringBuilder();
-                        String line = "";
-                        while ((line = bufferedReader.readLine()) != null) {
-                            //Toast.makeText(MainActivity.this, line, Toast.LENGTH_SHORT).show();
-                            if (line.contains("action=ACTION_UP, keyCode=KEYCODE_MEDIA_NEXT") && !myList.contains(line)) {
-                                myList.add(line);
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        System.out.println("Next");
-                                        makeSnackbar("Next");
-                                        Toast.makeText(MainActivity.this, "Next", Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                                //connectSSH();
-                            } else if (line.contains("action=ACTION_UP, keyCode=KEYCODE_MEDIA_PREVIOUS") && !myList.contains(line)) {
-                                myList.add(line);
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        System.out.println("Previous");
-                                        makeSnackbar("Previous");
-                                        Toast.makeText(MainActivity.this, "Previous", Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                            } else if (line.contains("action=ACTION_UP, keyCode=KEYCODE_MEDIA_PLAY_PAUSE") && !myList.contains(line)) {
-                                myList.add(line);
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        makeSnackbar("Play/Pause");
-                                        System.out.println("Play/Pause");
-                                        Toast.makeText(MainActivity.this, "Play/Pause", Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-
-                            }
-                        }
-                        Thread.sleep(1000);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }
-        });
-        if (!alreadyRunning) {
-            listenerThread.start();
-            alreadyRunning = true;
         }
     }
 

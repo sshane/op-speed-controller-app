@@ -24,11 +24,6 @@ public class ListenerService extends Service {
 
     public Context context = this;
     public Handler handler = null;
-    public static Runnable runnable = null;
-
-    List<String> myList;
-    Thread listenerThread;
-    Boolean alreadyRunning = false;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -38,38 +33,7 @@ public class ListenerService extends Service {
     @Override
     public void onCreate() {
         System.out.println("Service created!");
-        //Toast.makeText(this, "Service created!", Toast.LENGTH_LONG).show();
         startListener();
-
-        new Thread() {
-            @Override
-            public void run() {
-                playAudio();
-            }
-        }.start();
-
-
-        /*handler = new Handler();
-        runnable = new Runnable() {
-            public void run() {
-                Toast.makeText(context, "Service running", Toast.LENGTH_SHORT).show();
-                handler.postDelayed(runnable, 10000);
-            }
-        };
-
-        handler.postDelayed(runnable, 15000);*/
-    }
-
-    public void playAudio() {
-
-        // play dummy audio
-        AudioTrack at = new AudioTrack(AudioManager.STREAM_MUSIC, 48000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT,
-                AudioTrack.getMinBufferSize(48000, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT), AudioTrack.MODE_STREAM);
-        at.play();
-
-        // a little sleep
-        at.stop();
-        at.release();
     }
 
     public void startListener() {
@@ -108,26 +72,13 @@ public class ListenerService extends Service {
                 return super.onMediaButtonEvent(mediaButtonIntent);
             }
         });
-        Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
-        PendingIntent mediaButtonReceiverPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, mediaButtonIntent, 0);
-        // you can button by receiver after terminating your app
-        //ms.setMediaButtonReceiver(mediaButtonReceiverPendingIntent);
-
         ms.setActive(true);
     }
 
     @Override
     public void onDestroy() {
-        /* IF YOU WANT THIS SERVICE KILLED WITH THE APP THEN UNCOMMENT THE FOLLOWING LINE */
-        //handler.removeCallbacks(runnable);
         System.out.println("Service stopped");
-        //Toast.makeText(this, "Service stopped", Toast.LENGTH_LONG).show();
     }
-
-    /*@Override
-    public void onStart(Intent intent, int startid) {
-        Toast.makeText(this, "Service started by user.", Toast.LENGTH_LONG).show();
-    }*/
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -135,12 +86,11 @@ public class ListenerService extends Service {
                 .setContentTitle("Bluetooth Listener Running")
                 .setContentText("Tap to configure")
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setPriority(NotificationCompat.PRIORITY_HIGH);
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
         Notification notification = mBuilder.build();
         notification.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
-
 
         notificationManager.notify(1, notification);
         startForeground(1, notification);
