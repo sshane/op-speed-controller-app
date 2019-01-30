@@ -1,7 +1,9 @@
 package com.smiskol.speed_controller;
 
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -126,7 +128,15 @@ public class ListenerService extends Service {
                 .setContentTitle("Bluetooth Listener Running")
                 .setContentText("Tap to configure")
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setOngoing(true);
+
+        Intent resultIntent = new Intent(this, MainActivity.class);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addNextIntentWithParentStack(resultIntent);
+        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(1, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        mBuilder.setContentIntent(resultPendingIntent);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
         Notification notification = mBuilder.build();

@@ -5,8 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:descendantFocusability="beforeDescendants"
-    android:focusableInTouchMode="true"
     android:background="#3E3E3E">
 
     <TextView
@@ -26,7 +24,7 @@
         android:layout_height="wrap_content"
         android:textSize="22sp"
         android:paddingLeft="23dp"
-        android:paddingTop="23dp"
+        android:paddingTop="22dp"
         android:textColor="#000000"/>
 
 
@@ -82,6 +80,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:descendantFocusability="beforeDescendants"
+            android:focusableInTouchMode="true"
             android:layout_margin="20dp">
 
 
@@ -105,7 +105,6 @@
 
                 android:layout_width="wrap_content"
                 android:orientation="horizontal"
-                android:layout_gravity="center"
                 android:layout_marginTop="17dp"
                 android:layout_marginBottom="10dp"
                 android:layout_height="wrap_content">
@@ -113,6 +112,7 @@
                 <Switch
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginLeft="40dp"
                     android:id="@+id/listenSwitch" />
 
                 <TextView

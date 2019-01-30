@@ -14,6 +14,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -25,6 +26,8 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
+import android.text.InputFilter;
+import android.text.Spanned;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -67,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     Typeface semibold;
     Typeface regular;
     TextView alertTitle;
+    TextInputLayout ipEditTextLayout;
 
 
     @Override
@@ -86,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
         semibold = ResourcesCompat.getFont(this, R.font.proxima_semibold);
         regular = ResourcesCompat.getFont(this, R.font.proxima_regular);
         alertTitle = findViewById(R.id.alertTextTemp);
+        ipEditTextLayout = findViewById(R.id.ipEditTextLayout);
 
         setUpFont();
         doAnimations();
@@ -97,40 +102,30 @@ public class MainActivity extends AppCompatActivity {
         }*/
         createNotificationChannel();
 
-        Boolean isServiceRunning = isMyServiceRunning(ListenerService.class);
+        listenSwitch.setChecked(isMyServiceRunning(ListenerService.class)); //set switch to appropriate value upon start up if activity gets closed
 
-        listenSwitch.setChecked(isServiceRunning); //set switch to appropriate value upon start up if activity gets closed
-        if (isServiceRunning) {
-            listeningTextView.setText("Listening");
-        }
         if (preferences.getBoolean("ghostRider", false)) {
             doGhostRider(); //play a little tune ;)
         }
     }
 
     public void startListeners() {
-        final Intent listenerService = new Intent(this, ListenerService.class);
+        final Intent listenerService = new Intent(MainActivity.this, ListenerService.class);
 
         listenSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     if (!ipEditText.getText().toString().equals("") && ipEditText.getText().toString().length() >= 7) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            startForegroundService(listenerService);
-                        } else {
-                            startService(listenerService);
-                        }
-                        preferences.edit().putString("eonIP", ipEditText.getText().toString()).apply();
-                        listeningTextView.setText("Listening");
-                        makeSnackbar("Started service!");
                         ipEditText.setEnabled(false);
+                        listeningTextView.setText("Listening");
+                        makeSnackbar("Testing connection...");
+                        new CheckEON().execute();
                     } else {
                         listenSwitch.setChecked(false);
                         makeSnackbar("Please enter an IP!");
                         Animation mShakeAnimation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.shake);
-                        TextInputLayout mEditTextLayout = findViewById(R.id.ipEditTextLayout);
-                        mEditTextLayout.startAnimation(mShakeAnimation);
+                        ipEditTextLayout.startAnimation(mShakeAnimation);
                     }
                 } else {
                     stopService(listenerService);
@@ -142,6 +137,29 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public class CheckEON extends AsyncTask<Void, Void, Boolean> {
+
+        protected Boolean doInBackground(Void... v) {
+            return new SSHClass().testConnection(MainActivity.this, ipEditText.getText().toString());
+        }
+
+        protected void onPostExecute(Boolean result) {
+            if (result) {
+                final Intent listenerService = new Intent(MainActivity.this, ListenerService.class);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(listenerService);
+                } else {
+                    startService(listenerService);
+                }
+                preferences.edit().putString("eonIP", ipEditText.getText().toString()).apply();
+                makeSnackbar("Started service!");
+            } else {
+                listenSwitch.setChecked(false);
+                makeSnackbar("Couldn't connect to EON! Perhaps wrong IP?");
+            }
+        }
+    }
+
     public void cardPermissionLogic() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             Animation fadeIn = new AlphaAnimation(0, 1);
@@ -150,7 +168,8 @@ public class MainActivity extends AppCompatActivity {
             mainCard.startAnimation(fadeIn);
             mainCard.setVisibility(View.VISIBLE);
             permissionCard.setVisibility(View.GONE);
-
+        } else {
+            infoDialog();
         }
     }
 
@@ -220,6 +239,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void infoDialog() {
+        if (alertTitle.getParent() != null) {
+            ((ViewGroup) alertTitle.getParent()).removeView(alertTitle); // <- fix
+        }
+        alertTitle.setText("Welcome!");
+        alertTitle.setVisibility(View.VISIBLE);
+        alertTitle.setTypeface(semibold);
+        AlertDialog successDialog = new AlertDialog.Builder(this).setCustomTitle(alertTitle)
+                .setMessage("op Speed Controller is an app that uses intents from your Bluetooth button to control " +
+                        "your openpilot-supported car's speed via SSH commands.")
+                .setPositiveButton("Got it", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                }).show();
+
+        TextView tmpMessage = successDialog.getWindow().findViewById(android.R.id.message);
+        Button tmpButton = successDialog.getWindow().findViewById(android.R.id.button1);
+        tmpMessage.setTypeface(regular);
+        tmpButton.setTypeface(semibold);
+    }
+
     public void doGhostRider() {
         final MediaPlayer mMediaPlayer;
         mMediaPlayer = MediaPlayer.create(this, R.raw.ghost_riders);
@@ -249,6 +291,8 @@ public class MainActivity extends AppCompatActivity {
         permissionButton.setTypeface(semibold);
         cardViewText.setTypeface(regular);
         titleText.setTypeface(semibold);
+        listeningTextView.setTypeface(regular);
+        ipEditText.setTypeface(regular);
     }
 
     public void doAnimations() {
