@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.StrictMode;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -13,6 +14,16 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.KeyEvent;
 import android.widget.Toast;
+
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.Properties;
 
 public class ListenerService extends Service {
 
@@ -51,6 +62,7 @@ public class ListenerService extends Service {
                 if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
                     switch (keyEvent.getKeyCode()) {
                         case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                            //connectSSH();
                             Toast.makeText(context, "Play/Pause", Toast.LENGTH_SHORT).show();
                             break;
 
@@ -67,6 +79,40 @@ public class ListenerService extends Service {
             }
         });
         ms.setActive(true);
+    }
+
+    public void connectSSH() {
+        String eonIP = "192.168.1.32"; //soon to be inputtable by user
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+
+        StrictMode.setThreadPolicy(policy);
+        try {
+            JSch jsch = new JSch();
+            File file = new File(getFilesDir(), "eon_id.ppk");
+            jsch.addIdentity(file.getAbsolutePath());
+            Session session = jsch.getSession("root", eonIP, 8022);
+
+            Properties prop = new Properties();
+            prop.put("StrictHostKeyChecking", "no");
+            prop.put("PreferredAuthentications", "publickey");
+            session.setConfig(prop);
+
+            session.connect();
+
+            ChannelExec channelssh = (ChannelExec) session.openChannel("exec");
+            //ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            //channelssh.setOutputStream(baos);
+
+            channelssh.setCommand("cd /data/HELLOTHERE; mkdir ITSFINALLYWORKING");
+            channelssh.connect();
+            channelssh.disconnect();
+            //Toast.makeText(this, baos.toString(), Toast.LENGTH_SHORT).show();
+
+            //return baos.toString();
+        } catch (Exception e) {
+            Toast.makeText(this, "Can't connect to EON.", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
     }
 
     @Override
