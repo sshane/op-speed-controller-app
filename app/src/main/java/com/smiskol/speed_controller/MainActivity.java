@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -24,6 +25,8 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,6 +42,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toolbar;
 
 
 import org.w3c.dom.Text;
@@ -93,23 +97,15 @@ public class MainActivity extends AppCompatActivity {
         }*/
         createNotificationChannel();
 
-
         Boolean isServiceRunning = isMyServiceRunning(ListenerService.class);
 
         listenSwitch.setChecked(isServiceRunning); //set switch to appropriate value upon start up if activity gets closed
         if (isServiceRunning) {
             listeningTextView.setText("Listening");
         }
-
-        /*final MediaPlayer mMediaPlayer; //play a little tune ;)
-        mMediaPlayer = MediaPlayer.create(this, R.raw.ghost_riders);
-        mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                mMediaPlayer.release();
-            }
-        });
-        mMediaPlayer.start();*/
+        if (preferences.getBoolean("ghostRider", false)) {
+            doGhostRider(); //play a little tune ;)
+        }
     }
 
     public void startListeners() {
@@ -224,6 +220,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void doGhostRider() {
+        final MediaPlayer mMediaPlayer;
+        mMediaPlayer = MediaPlayer.create(this, R.raw.ghost_riders);
+        mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                mMediaPlayer.release();
+            }
+        });
+        mMediaPlayer.start();
+    }
 
     public void setUpMainCard() {
         ipEditText.setOnTouchListener(new View.OnTouchListener() {
@@ -361,6 +368,32 @@ public class MainActivity extends AppCompatActivity {
 
         } catch (IOException ioe) {
             ioe.printStackTrace();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.ghost_rider:
+                if (preferences.getBoolean("ghostRider", false)) {
+                    preferences.edit().putBoolean("ghostRider", false).apply();
+                    makeSnackbar("Ghost Rider disabled!");
+                } else {
+                    preferences.edit().putBoolean("ghostRider", true).apply();
+                    makeSnackbar("Ghost Rider enabled!");
+                    doGhostRider();
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
