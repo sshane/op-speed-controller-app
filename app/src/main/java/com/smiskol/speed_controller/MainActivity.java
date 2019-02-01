@@ -363,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 preferences.edit().putString("eonIP", ipEditText.getText().toString()).apply();
                 makeSnackbar("Started service!");
-                listeningTextView.setText("Listening");
+                listeningTextView.setText("Listening...");
                 buttonLayout.setVisibility(View.VISIBLE);
                 if (!preferences.getBoolean("warning", false)) {
                     warningDialog();
