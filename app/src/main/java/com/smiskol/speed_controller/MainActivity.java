@@ -526,7 +526,7 @@ public class MainActivity extends AppCompatActivity {
         alertTitle.setVisibility(View.VISIBLE);
         alertTitle.setTypeface(semibold);
         AlertDialog successDialog = new AlertDialog.Builder(this).setCustomTitle(alertTitle)
-                .setMessage("op Speed Controller is an app that can control your openpilot-supported car's speed via SSH commands either in-app or with a Bluetooth button.")
+                .setMessage("op Speed Controller is an app that can control your openpilot-supported car's speed via SSH commands either in-app or with a Bluetooth remote.")
                 .setPositiveButton("Whatever, dude", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
