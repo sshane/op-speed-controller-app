@@ -58,6 +58,6 @@
         self.gas_pressed = not cp.vl["PCM_CRUISE"]['GAS_RELEASED']
     ```
     
-    #### For Honda's, find the line `self.v_cruise_pcm = cp.vl["CRUISE"]['CRUISE_SPEED_PCM']`, which should be around line `296`, then use the same steps above, only replace `cp.vl["PCM_CRUISE_2"]['SET_SPEED']` with `cp.vl["CRUISE"]['CRUISE_SPEED_PCM']`. It should work all the same, though it's only been tested on a Toyota.
+    #### For Honda's, find the line `self.v_cruise_pcm = cp.vl["CRUISE"]['CRUISE_SPEED_PCM']`, which should be around line `296`, then use the same steps above, only replace `cp.vl["PCM_CRUISE_2"]['SET_SPEED']` with `cp.vl["CRUISE"]['CRUISE_SPEED_PCM']`. It should work all the same.
     
 Now you're ready to use the app to control your car's speed! Please contact me on Discord (Shane#6175) or email (shane@smiskol.com) if you are having trouble with this step, or you have a make other than Toyota and I will look into it!
