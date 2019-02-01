@@ -34,7 +34,7 @@
       self.v_cruise_pcm = float(speed.read())
       ```
       
-      Ensure the formatting is correct when you paste it, there should be no extra or missing indents, else it will not compile correctly. Then you simply `put` the file back with `sftp` and `reboot` with `ssh`. The full code section should look like this:
+      Ensure the formatting is correct when you paste it, there should be no extra or missing indents. Then you simply `put` the file back with `sftp` and `reboot` with `ssh`. The full code section should look like this:
       
       ```python
         self.steer_torque_motor = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_EPS']
