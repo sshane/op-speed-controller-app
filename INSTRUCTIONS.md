@@ -2,7 +2,7 @@
 
 1. The app should have already uploaded the Python listener file to `/data/openpilot/selfdrive/speed_controller.py`. However if it did not, download the file [here](https://github.com/ShaneSmiskol/op-speed-controller-app/blob/master/speed_controller.py) and place it in that directory via `sftp` using the command:
 
-    `put /path/to/speed_controller.py /data/openpilot/data/selfdrive/speed_controller.py`.
+    `put /path/to/speed_controller.py /data/openpilot/selfdrive/speed_controller.py`.
 
 
 2. The second and final step is to modify your car's respective `carstate.py` file in `/data/openpilot/selfdrive/car/toyota` (replace `toyota` with your car's make) This can be done with `sftp` as well, using `get` and then `put` with the same syntax above. For `toyota`, find this section of code in `carstate.py`:
