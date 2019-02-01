@@ -5,7 +5,7 @@
     `put /path/to/speed_controller.py /data/openpilot/data/selfdrive/speed_controller.py`.
 
 
-2. The second and final step is to modify your car's respective `carstate.py` file in `/data/openpilot/selfdrive/car/toyota` (replace `toyota` with your car's make) This can be done with `sftp` as well, using `get` and then `put` with the same syntax above. For `toyota`, find this section of code:
+2. The second and final step is to modify your car's respective `carstate.py` file in `/data/openpilot/selfdrive/car/toyota` (replace `toyota` with your car's make) This can be done with `sftp` as well, using `get` and then `put` with the same syntax above. For `toyota`, find this section of code in `carstate.py`:
 
     ```python
     self.steer_torque_motor = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_EPS']
