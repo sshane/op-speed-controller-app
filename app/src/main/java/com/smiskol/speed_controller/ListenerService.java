@@ -6,10 +6,12 @@ import android.app.Service;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.StrictMode;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -29,7 +31,7 @@ import java.util.Properties;
 
 public class ListenerService extends Service {
 
-    public Context context = this;
+    Context context;
     public Handler handler = null;
 
     @Override
@@ -43,7 +45,12 @@ public class ListenerService extends Service {
         startListener();
     }
 
+    public void getActivityContext(Context c) {
+        context = c;
+    }
+
     public void startListener() {
+        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         MediaSessionCompat ms = new MediaSessionCompat(getApplicationContext(), getPackageName());
 
@@ -64,16 +71,17 @@ public class ListenerService extends Service {
                 if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
                     switch (keyEvent.getKeyCode()) {
                         case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                            //connectSSH();
-                            Toast.makeText(context, "Play/Pause", Toast.LENGTH_SHORT).show();
+                            //Toast.makeText(context, "Play/Pause", Toast.LENGTH_SHORT).show();
                             break;
 
                         case KeyEvent.KEYCODE_MEDIA_NEXT:
-                            Toast.makeText(context, "Next", Toast.LENGTH_SHORT).show();
+                            new SSHClass().runSpeedChange(context, preferences.getString("eonIP", ""), 8);
+                            Toast.makeText(context, "Decreased speed!", Toast.LENGTH_SHORT).show();
                             break;
 
                         case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
-                            Toast.makeText(context, "Previous", Toast.LENGTH_SHORT).show();
+                            new SSHClass().runSpeedChange(context, preferences.getString("eonIP", ""), -8);
+                            Toast.makeText(context, "Increased speed!", Toast.LENGTH_SHORT).show();
                             break;
                     }
                 }
@@ -81,40 +89,6 @@ public class ListenerService extends Service {
             }
         });
         ms.setActive(true);
-    }
-
-    public void connectSSH() {
-        String eonIP = "192.168.1.32"; //soon to be inputtable by user
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-
-        StrictMode.setThreadPolicy(policy);
-        try {
-            JSch jsch = new JSch();
-            File file = new File(getFilesDir(), "eon_id.ppk");
-            jsch.addIdentity(file.getAbsolutePath());
-            Session session = jsch.getSession("root", eonIP, 8022);
-
-            Properties prop = new Properties();
-            prop.put("StrictHostKeyChecking", "no");
-            prop.put("PreferredAuthentications", "publickey");
-            session.setConfig(prop);
-
-            session.connect();
-
-            ChannelExec channelssh = (ChannelExec) session.openChannel("exec");
-            //ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            //channelssh.setOutputStream(baos);
-
-            channelssh.setCommand("cd /data/HELLOTHERE; mkdir ITSFINALLYWORKING");
-            channelssh.connect();
-            channelssh.disconnect();
-            //Toast.makeText(this, baos.toString(), Toast.LENGTH_SHORT).show();
-
-            //return baos.toString();
-        } catch (Exception e) {
-            Toast.makeText(this, "Can't connect to EON.", Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
-        }
     }
 
     @Override

@@ -14,9 +14,11 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
@@ -45,15 +47,27 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.Toolbar;
 
 
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+
 import org.w3c.dom.Text;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -71,7 +85,9 @@ public class MainActivity extends AppCompatActivity {
     Typeface regular;
     TextView alertTitle;
     TextInputLayout ipEditTextLayout;
-
+    LinearLayout buttonLayout;
+    Button addButton;
+    Button decreaseButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,15 +107,16 @@ public class MainActivity extends AppCompatActivity {
         regular = ResourcesCompat.getFont(this, R.font.proxima_regular);
         alertTitle = findViewById(R.id.alertTextTemp);
         ipEditTextLayout = findViewById(R.id.ipEditTextLayout);
+        buttonLayout = findViewById(R.id.buttonLayout);
+        addButton = findViewById(R.id.addButton);
+        decreaseButton = findViewById(R.id.decreaseButton);
 
         setUpFont();
         doAnimations();
         cardPermissionLogic();
         setUpMainCard();
         startListeners();
-        /*if (preferences.getBoolean("firstRun", false)) {
-            runOnFirstRun();
-        }*/
+
         createNotificationChannel();
 
         listenSwitch.setChecked(isMyServiceRunning(ListenerService.class)); //set switch to appropriate value upon start up if activity gets closed
@@ -110,6 +127,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startListeners() {
+        addButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new RunSpeedChange().execute(8);
+            }
+        });
+
+        decreaseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new RunSpeedChange().execute(-8);
+            }
+        });
+
         final Intent listenerService = new Intent(MainActivity.this, ListenerService.class);
 
         listenSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -117,24 +148,202 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     if (!ipEditText.getText().toString().equals("") && ipEditText.getText().toString().length() >= 7) {
-                        ipEditText.setEnabled(false);
-                        listeningTextView.setText("Listening");
-                        makeSnackbar("Testing connection...");
-                        new CheckEON().execute();
+                        if (preferences.getBoolean("filePutSuccessfully", false)) {
+                            if (preferences.getBoolean("clickedInfo", false)) {
+                                if (preferences.getBoolean("hasInstalled", false)) {
+                                    ipEditText.setEnabled(false);
+                                    listeningTextView.setText("Testing connection");
+                                    makeSnackbar("Testing connection...");
+                                    new CheckEON().execute();
+                                } else {
+                                    installDialog("install");
+                                    listenSwitch.setChecked(false);
+                                }
+                            } else {
+                                installDialog("modified");
+                                listenSwitch.setChecked(false);
+                            }
+                        } else {
+                            installDialog("put");
+                            listenSwitch.setChecked(false);
+                        }
                     } else {
                         listenSwitch.setChecked(false);
                         makeSnackbar("Please enter an IP!");
                         Animation mShakeAnimation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.shake);
                         ipEditTextLayout.startAnimation(mShakeAnimation);
                     }
+
+
                 } else {
                     stopService(listenerService);
                     listeningTextView.setText("Not Listening");
+                    buttonLayout.setVisibility(View.GONE);
                     makeSnackbar("Stopped service!");
                     ipEditText.setEnabled(true);
                 }
             }
         });
+    }
+
+    public void dialogAfterPut(Boolean success) {
+        if (success) {
+            preferences.edit().putBoolean("filePutSuccessfully", true).apply();
+            installDialog("install");
+        } else {
+            installDialog("error");
+        }
+    }
+
+    public void installDialog(String status) {
+        if (status.equals("put")) {
+            if (alertTitle.getParent() != null) {
+                ((ViewGroup) alertTitle.getParent()).removeView(alertTitle);
+            }
+            alertTitle.setText("Easy, Tiger!");
+            alertTitle.setVisibility(View.VISIBLE);
+            alertTitle.setTypeface(semibold);
+            AlertDialog successDialog = new AlertDialog.Builder(MainActivity.this).setCustomTitle(alertTitle)
+                    .setMessage("We first need a few files installed/modified on your EON to receive requests made by this app. Press the button to upload the Python listener file to your EON. Further instructions will follow.")
+                    .setPositiveButton("I'm ready!", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            new PutListenerFile().execute();
+                            listenSwitch.setEnabled(false);
+                        }
+                    })
+                    .show();
+
+            TextView tmpMessage = successDialog.getWindow().findViewById(android.R.id.message);
+            Button tmpButton = successDialog.getWindow().findViewById(android.R.id.button1);
+            tmpMessage.setTypeface(regular);
+            tmpButton.setTypeface(semibold);
+        } else if (status.equals("install")) {
+            if (alertTitle.getParent() != null) {
+                ((ViewGroup) alertTitle.getParent()).removeView(alertTitle);
+            }
+            alertTitle.setText("Hurray!");
+            listenSwitch.setEnabled(true);
+            alertTitle.setVisibility(View.VISIBLE);
+            alertTitle.setTypeface(semibold);
+            AlertDialog successDialog = new AlertDialog.Builder(MainActivity.this).setCustomTitle(alertTitle)
+                    .setMessage("It uploaded successfully. Now you will need to SSH into your EON to manually modify your car's respective carstate.py file. Instructions can be found by clicking the info button.")
+                    .setPositiveButton("Info", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ShaneSmiskol/op-speed-controller-app/blob/master/INSTRUCTIONS.md"));
+                            startActivity(browserIntent);
+                            installDialog("modified");
+                            preferences.edit().putBoolean("clickedInfo", true).apply();
+                        }
+                    })
+                    .show();
+
+            TextView tmpMessage = successDialog.getWindow().findViewById(android.R.id.message);
+            Button tmpButton = successDialog.getWindow().findViewById(android.R.id.button1);
+            tmpMessage.setTypeface(regular);
+            tmpButton.setTypeface(semibold);
+        } else if (status.equals("error")) {
+            if (alertTitle.getParent() != null) {
+                ((ViewGroup) alertTitle.getParent()).removeView(alertTitle);
+            }
+            listenSwitch.setEnabled(true);
+            alertTitle.setText("This is awkward...");
+            alertTitle.setVisibility(View.VISIBLE);
+            alertTitle.setTypeface(semibold);
+            AlertDialog successDialog = new AlertDialog.Builder(MainActivity.this).setCustomTitle(alertTitle)
+                    .setMessage("It seems we were unable to connect to your EON. Ensure the IP is correct, and that you're on the same network!")
+                    .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            new PutListenerFile().execute();
+                            listenSwitch.setEnabled(false);
+                        }
+                    })
+                    .show();
+
+            TextView tmpMessage = successDialog.getWindow().findViewById(android.R.id.message);
+            Button tmpButton = successDialog.getWindow().findViewById(android.R.id.button1);
+            tmpMessage.setTypeface(regular);
+            tmpButton.setTypeface(semibold);
+        } else if (status.equals("modified")) {
+            if (alertTitle.getParent() != null) {
+                ((ViewGroup) alertTitle.getParent()).removeView(alertTitle);
+            }
+            alertTitle.setText("Are you ready?");
+            alertTitle.setVisibility(View.VISIBLE);
+            alertTitle.setTypeface(semibold);
+            AlertDialog successDialog = new AlertDialog.Builder(MainActivity.this).setCustomTitle(alertTitle)
+                    .setMessage("Press the button to verify you've modified your car's carstate.py file. If you haven't yet, click the info button to get instructions.")
+                    .setPositiveButton("It's done!", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            preferences.edit().putBoolean("hasInstalled", true).apply();
+                            preferences.edit().putBoolean("clickedInfo", true).apply();
+                            makeSnackbar("You're ready to go!");
+                        }
+                    })
+                    .setNegativeButton("Info", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ShaneSmiskol/op-speed-controller-app/blob/master/INSTRUCTIONS.md"));
+                            startActivity(browserIntent);
+                            preferences.edit().putBoolean("clickedInfo", true).apply();
+                            installDialog("modified");
+                        }
+                    })
+                    .show();
+
+            TextView tmpMessage = successDialog.getWindow().findViewById(android.R.id.message);
+            Button tmpButton = successDialog.getWindow().findViewById(android.R.id.button1);
+            tmpMessage.setTypeface(regular);
+            tmpButton.setTypeface(semibold);
+        }
+    }
+
+    public void warningDialog() {
+        if (alertTitle.getParent() != null) {
+            ((ViewGroup) alertTitle.getParent()).removeView(alertTitle);
+        }
+        alertTitle.setText("SAFETY WARNING!!");
+        alertTitle.setVisibility(View.VISIBLE);
+        alertTitle.setTypeface(semibold);
+        AlertDialog successDialog = new AlertDialog.Builder(MainActivity.this).setCustomTitle(alertTitle)
+                .setMessage("Please note that it's best to initially set your cruise control to a high speed, then alter it with this app to your desired speed. Setting it too low, then increasing it with this app will cause unwanted cruise control behavior. Proceed at your own risk.")
+                .setPositiveButton("Sounds scary...", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (alertTitle.getParent() != null) {
+                            ((ViewGroup) alertTitle.getParent()).removeView(alertTitle);
+                        }
+                        alertTitle.setText("Don't worry!");
+                        alertTitle.setVisibility(View.VISIBLE);
+                        alertTitle.setTypeface(semibold);
+                        AlertDialog successDialog = new AlertDialog.Builder(MainActivity.this).setCustomTitle(alertTitle)
+                                .setMessage("You won't die or anything. It's just a bug I'm working out. You can always reset the system by tapping up or down on the cruise control stalk if anything goes wrong.")
+                                .setPositiveButton("Will you go away now?", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        makeSnackbar("Absolutely " + ("\ud83d\udc4d"));
+                                        preferences.edit().putBoolean("warning", true).apply();
+                                    }
+                                })
+                                .setCancelable(false)
+                                .show();
+
+                        TextView tmpMessage = successDialog.getWindow().findViewById(android.R.id.message);
+                        Button tmpButton = successDialog.getWindow().findViewById(android.R.id.button1);
+                        tmpMessage.setTypeface(regular);
+                        tmpButton.setTypeface(semibold);
+                    }
+                })
+                .setCancelable(false)
+                .show();
+
+        TextView tmpMessage = successDialog.getWindow().findViewById(android.R.id.message);
+        Button tmpButton = successDialog.getWindow().findViewById(android.R.id.button1);
+        tmpMessage.setTypeface(regular);
+        tmpButton.setTypeface(semibold);
     }
 
     public class CheckEON extends AsyncTask<Void, Void, Boolean> {
@@ -146,6 +355,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Boolean result) {
             if (result) {
                 final Intent listenerService = new Intent(MainActivity.this, ListenerService.class);
+                new ListenerService().getActivityContext(MainActivity.this);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(listenerService);
                 } else {
@@ -153,6 +363,11 @@ public class MainActivity extends AppCompatActivity {
                 }
                 preferences.edit().putString("eonIP", ipEditText.getText().toString()).apply();
                 makeSnackbar("Started service!");
+                listeningTextView.setText("Listening");
+                buttonLayout.setVisibility(View.VISIBLE);
+                if (!preferences.getBoolean("warning", false)) {
+                    warningDialog();
+                }
             } else {
                 listenSwitch.setChecked(false);
                 makeSnackbar("Couldn't connect to EON! Perhaps wrong IP?");
@@ -160,10 +375,73 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public class PutListenerFile extends AsyncTask<Void, Void, Boolean> {
+
+        protected Boolean doInBackground(Void... v) {
+            String eonIP = ipEditText.getText().toString();
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+
+            StrictMode.setThreadPolicy(policy);
+            try {
+                JSch jsch = new JSch();
+                File file = new File(getFilesDir(), "eon_id.ppk");
+                jsch.addIdentity(file.getAbsolutePath());
+                Session session = jsch.getSession("root", eonIP, 8022);
+
+                Properties prop = new Properties();
+                prop.put("StrictHostKeyChecking", "no");
+                prop.put("PreferredAuthentications", "publickey");
+                session.setConfig(prop);
+
+                session.connect(5000);
+
+                Channel channel = session.openChannel("sftp");
+                channel.connect();
+
+                ChannelSftp sftp = (ChannelSftp) channel;
+
+                File speedControllerFile = new File(getFilesDir(), "speed_controller.py");
+
+                sftp.put(speedControllerFile.getAbsolutePath(), "/data/openpilot/selfdrive/speed_controller.py");
+
+                channel.disconnect();
+                session.disconnect();
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        protected void onPostExecute(Boolean result) {
+            if (result) {
+                dialogAfterPut(true);
+            } else {
+                dialogAfterPut(false);
+            }
+        }
+    }
+
+    public class RunSpeedChange extends AsyncTask<Integer, Void, Boolean> {
+
+        protected Boolean doInBackground(Integer... speedChange) {
+            return new SSHClass().runSpeedChange(MainActivity.this, ipEditText.getText().toString(), speedChange[0].intValue());
+        }
+
+        protected void onPostExecute(Boolean result) {
+            if (!result) {
+                listenSwitch.setChecked(false);
+                makeSnackbar("Couldn't connect to EON! Perhaps wrong IP?");
+            } else {
+                makeSnackbar("Successful!");
+            }
+        }
+    }
+
     public void cardPermissionLogic() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             Animation fadeIn = new AlphaAnimation(0, 1);
-            fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
+            fadeIn.setInterpolator(new DecelerateInterpolator());
             fadeIn.setDuration(1200);
             mainCard.startAnimation(fadeIn);
             mainCard.setVisibility(View.VISIBLE);
@@ -183,56 +461,57 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case 69: {
-                writePrivateKeyFile();
-                preferences.edit().putBoolean("firstRun", false).apply();
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (alertTitle.getParent() != null) {
-                        ((ViewGroup) alertTitle.getParent()).removeView(alertTitle); // <- fix
+                writeSupportingFiles();
+                if (preferences.getBoolean("firstRun", true)) {
+                    if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        if (alertTitle.getParent() != null) {
+                            ((ViewGroup) alertTitle.getParent()).removeView(alertTitle);
+                        }
+                        alertTitle.setText("Granted!");
+                        alertTitle.setVisibility(View.VISIBLE);
+                        alertTitle.setTypeface(semibold);
+                        AlertDialog successDialog = new AlertDialog.Builder(this).setCustomTitle(alertTitle)
+                                .setMessage("Awesome! Permission granted. I've written the EON private key to a file for us to read when we make connections to the EON later.")
+                                .setPositiveButton("Sensational", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                    }
+                                })
+                                .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                    @Override
+                                    public void onDismiss(DialogInterface dialog) {
+                                        startCardViewAnimation();
+                                    }
+                                }).show();
+
+                        TextView tmpMessage = successDialog.getWindow().findViewById(android.R.id.message);
+                        Button tmpButton = successDialog.getWindow().findViewById(android.R.id.button1);
+                        tmpMessage.setTypeface(regular);
+                        tmpButton.setTypeface(semibold);
+                        preferences.edit().putBoolean("firstRun", false).apply();
+                    } else {
+                        if (alertTitle.getParent() != null) {
+                            ((ViewGroup) alertTitle.getParent()).removeView(alertTitle);
+                        }
+                        alertTitle.setText("Uh oh!");
+                        alertTitle.setVisibility(View.VISIBLE);
+                        alertTitle.setTypeface(semibold);
+                        AlertDialog deniedDialog = new AlertDialog.Builder(this).setCustomTitle(alertTitle)
+                                .setMessage("You've denied the storage permission. We need this to write the EON private key to a file so we can make connections over SSH. Please accept the permission.")
+                                .setPositiveButton("Fine, Retry", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        requestPermission(findViewById(R.id.permissionButton));
+                                    }
+                                })
+                                .show();
+
+                        TextView tmpMessage = deniedDialog.getWindow().findViewById(android.R.id.message);
+                        Button tmpButton = deniedDialog.getWindow().findViewById(android.R.id.button1);
+                        tmpMessage.setTypeface(regular);
+                        tmpButton.setTypeface(semibold);
                     }
-                    alertTitle.setText("Granted!");
-                    alertTitle.setVisibility(View.VISIBLE);
-                    alertTitle.setTypeface(semibold);
-                    AlertDialog successDialog = new AlertDialog.Builder(this).setCustomTitle(alertTitle)
-                            .setMessage("Awesome! Permission granted. I've written the EON private key to a file for us to read when we make connections to the EON later.")
-                            .setPositiveButton("Close", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-
-                                }
-                            })
-                            .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                                @Override
-                                public void onDismiss(DialogInterface dialog) {
-                                    startCardViewAnimation();
-                                }
-                            }).show();
-
-                    TextView tmpMessage = successDialog.getWindow().findViewById(android.R.id.message);
-                    Button tmpButton = successDialog.getWindow().findViewById(android.R.id.button1);
-                    tmpMessage.setTypeface(regular);
-                    tmpButton.setTypeface(semibold);
-
-                } else {
-                    if (alertTitle.getParent() != null) {
-                        ((ViewGroup) alertTitle.getParent()).removeView(alertTitle); // <- fix
-                    }
-                    alertTitle.setText("Uh oh!");
-                    alertTitle.setVisibility(View.VISIBLE);
-                    alertTitle.setTypeface(semibold);
-                    AlertDialog deniedDialog = new AlertDialog.Builder(this).setCustomTitle(alertTitle)
-                            .setMessage("You've denied the storage permission. We need this to write the EON private key to a file so we can make connections over SSH. Please accept the permission.")
-                            .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    requestPermission(findViewById(R.id.permissionButton));
-                                }
-                            })
-                            .show();
-
-                    TextView tmpMessage = deniedDialog.getWindow().findViewById(android.R.id.message);
-                    Button tmpButton = deniedDialog.getWindow().findViewById(android.R.id.button1);
-                    tmpMessage.setTypeface(regular);
-                    tmpButton.setTypeface(semibold);
                 }
                 return;
             }
@@ -241,20 +520,20 @@ public class MainActivity extends AppCompatActivity {
 
     public void infoDialog() {
         if (alertTitle.getParent() != null) {
-            ((ViewGroup) alertTitle.getParent()).removeView(alertTitle); // <- fix
+            ((ViewGroup) alertTitle.getParent()).removeView(alertTitle);
         }
         alertTitle.setText("Welcome!");
         alertTitle.setVisibility(View.VISIBLE);
         alertTitle.setTypeface(semibold);
         AlertDialog successDialog = new AlertDialog.Builder(this).setCustomTitle(alertTitle)
-                .setMessage("op Speed Controller is an app that uses intents from your Bluetooth button to control " +
-                        "your openpilot-supported car's speed via SSH commands.")
-                .setPositiveButton("Got it", new DialogInterface.OnClickListener() {
+                .setMessage("op Speed Controller is an app that can control your openpilot-supported car's speed via SSH commands either in-app or with a Bluetooth button.")
+                .setPositiveButton("Whatever, dude", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
                     }
-                }).show();
+                }).setCancelable(false)
+                .show();
 
         TextView tmpMessage = successDialog.getWindow().findViewById(android.R.id.message);
         Button tmpButton = successDialog.getWindow().findViewById(android.R.id.button1);
@@ -293,6 +572,8 @@ public class MainActivity extends AppCompatActivity {
         titleText.setTypeface(semibold);
         listeningTextView.setTypeface(regular);
         ipEditText.setTypeface(regular);
+        addButton.setTypeface(semibold);
+        decreaseButton.setTypeface(semibold);
     }
 
     public void doAnimations() {
@@ -302,7 +583,7 @@ public class MainActivity extends AppCompatActivity {
         titleText.startAnimation(titleAnimation);
 
         Animation fadeIn = new AlphaAnimation(0, 1);
-        fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
+        fadeIn.setInterpolator(new DecelerateInterpolator());
         fadeIn.setDuration(1200);
 
         permissionCard.startAnimation(fadeIn);
@@ -327,6 +608,7 @@ public class MainActivity extends AppCompatActivity {
                 permissionCard.setVisibility(View.GONE);
             }
         }, 900);
+
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
@@ -367,7 +649,7 @@ public class MainActivity extends AppCompatActivity {
         mIsInForegroundMode = true;
     }
 
-    public void writePrivateKeyFile() {
+    public void writeSupportingFiles() {
         try {
             File file = new File(getFilesDir(), "eon_id.ppk");
             if (!file.exists() || file.length() == 0) {
@@ -412,7 +694,40 @@ public class MainActivity extends AppCompatActivity {
 
         } catch (IOException ioe) {
             ioe.printStackTrace();
+            makeSnackbar("Error writing support files.");
         }
+
+        try {
+            File file = new File(getFilesDir(), "speed_controller.py");
+            if (!file.exists() || file.length() == 0) {
+                FileOutputStream fOut = new FileOutputStream(file);
+                OutputStreamWriter osw = new OutputStreamWriter(fOut);
+
+                String speedController = "import sys\n" +
+                        "live_speed_file = '/data/live_speed_file'\n" +
+                        "\n" +
+                        "def write_file(a):\n" +
+                        "    speed = open(live_speed_file, \"r\")\n" +
+                        "    modified_speed=float(speed.read())+a\n" +
+                        "    with open(live_speed_file, 'w') as f:\n" +
+                        "        f.write(str(modified_speed))\n" +
+                        "\n" +
+                        "if __name__ == \"__main__\":\n" +
+                        "    write_file(int(sys.argv[1]))";
+
+                osw.write(speedController);
+
+                osw.close();
+                System.out.println("File written");
+            } else {
+                System.out.println("File already written");
+            }
+
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+            makeSnackbar("Error writing support files.");
+        }
+
     }
 
     @Override
@@ -435,6 +750,16 @@ public class MainActivity extends AppCompatActivity {
                     makeSnackbar("Ghost Rider enabled!");
                     doGhostRider();
                 }
+                return true;
+
+            case R.id.ebay_link:
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.ebay.com/sch/i.html?_from=R40&_trksid=m570.l1313&_nkw=Car+Bluetooth4.0+Media+Button+Music+Steering+Wheel+Control+for+Smartphone&_sacat=0"));
+                startActivity(browserIntent);
+                return true;
+
+            case R.id.instructions:
+                Intent browserIntent2 = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ShaneSmiskol/op-speed-controller-app/blob/master/INSTRUCTIONS.md"));
+                startActivity(browserIntent2);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

@@ -7,8 +7,16 @@
     <item
         android:id="@+id/ghost_rider"
         android:title="Ghost Rider">
-
     </item>
 
+    <item
+        android:id="@+id/instructions"
+        android:title="Setup Instructions">
+    </item>
+
+    <item
+        android:id="@+id/ebay_link"
+        android:title="eBay Button Link">
+    </item>
 
 </menu>

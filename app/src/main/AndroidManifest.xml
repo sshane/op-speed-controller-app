@@ -17,10 +17,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-
         <service android:enabled="true"
             android:name="com.smiskol.speed_controller.ListenerService"/>
-        <activity android:name="com.smiskol.speed_controller.MainActivity">
+        <activity android:name="com.smiskol.speed_controller.MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

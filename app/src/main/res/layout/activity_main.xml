@@ -17,6 +17,7 @@
         android:text="op Speed Controller"
         android:textColor="#FFFFFF"
         android:textSize="34sp" />
+
     <TextView
         android:id="@+id/alertTextTemp"
         android:visibility="gone"
@@ -25,7 +26,7 @@
         android:textSize="22sp"
         android:paddingLeft="23dp"
         android:paddingTop="22dp"
-        android:textColor="#000000"/>
+        android:textColor="#000000" />
 
 
     <android.support.v7.widget.CardView
@@ -80,52 +81,102 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:descendantFocusability="beforeDescendants"
-            android:focusableInTouchMode="true"
-            android:layout_margin="20dp">
-
-
-            <android.support.design.widget.TextInputLayout
-                android:id="@+id/ipEditTextLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <EditText
-                    android:id="@+id/ipEditText"
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"
-                    android:maxLines="1"
-                    android:lines="1"
-                    android:maxLength="15"
-                    android:hint="EON IP" />
-
-            </android.support.design.widget.TextInputLayout>
+            android:animateLayoutChanges="true"
+            android:layout_marginBottom="10dp">
 
             <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:descendantFocusability="beforeDescendants"
+                android:focusableInTouchMode="true"
+                android:layout_marginTop="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_marginLeft="20dp">
 
-                android:layout_width="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="17dp"
-                android:layout_marginBottom="10dp"
-                android:layout_height="wrap_content">
+                <android.support.design.widget.TextInputLayout
+                    android:id="@+id/ipEditTextLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
 
-                <Switch
+                    <EditText
+                        android:id="@+id/ipEditText"
+                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:maxLines="1"
+                        android:lines="1"
+                        android:maxLength="15"
+                        android:hint="EON IP" />
+
+                </android.support.design.widget.TextInputLayout>
+
+                <LinearLayout
+
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="40dp"
-                    android:id="@+id/listenSwitch" />
+                    android:orientation="horizontal"
+                    android:layout_marginTop="17dp"
+                    android:layout_marginBottom="12dp"
+                    android:layout_height="wrap_content">
 
-                <TextView
-                    android:textSize="20dp"
-                    android:layout_marginLeft="3dp"
-                    android:id="@+id/listeningText"
-                    android:layout_width="wrap_content"
-                    android:text="Not Listening"
-                    android:textColor="#7f7f7f"
-                    android:layout_height="wrap_content" />
+                    <Switch
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="40dp"
+                        android:id="@+id/listenSwitch" />
+
+                    <TextView
+                        android:textSize="20dp"
+                        android:layout_marginLeft="3dp"
+                        android:id="@+id/listeningText"
+                        android:layout_width="wrap_content"
+                        android:text="Not Listening"
+                        android:textColor="#7f7f7f"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:id="@+id/buttonLayout"
+                android:visibility="gone">
 
+                <View
+                    android:id="@+id/separator"
+                    android:background="#e0e0e0"
+                    android:layout_marginTop="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="1dp"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentTop="true" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="5dp"
+                    android:layout_gravity="center">
+
+                    <Button
+                        android:id="@+id/addButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="- 5 MPH"
+                        android:textSize="18sp"
+                        style="@style/Widget.AppCompat.Button.Borderless.Colored" />
+
+                    <Button
+                        android:id="@+id/decreaseButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+ 5 MPH"
+                        android:textSize="18sp"
+                        style="@style/Widget.AppCompat.Button.Borderless.Colored" />
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
     </android.support.v7.widget.CardView>
 
