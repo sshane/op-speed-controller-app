@@ -1,6 +1,6 @@
 ## Openpilot Setup Instructions (easy as 1-2)
 
-1. The app should have already uploaded the Python listener file to `/data/openpilot/selfdrive/speed_controller.py`. However if it did not, download the file [here]() and place it in that directory via `sftp` using the command:
+1. The app should have already uploaded the Python listener file to `/data/openpilot/selfdrive/speed_controller.py`. However if it did not, download the file [here](https://github.com/ShaneSmiskol/op-speed-controller-app/blob/master/speed_controller.py) and place it in that directory via `sftp` using the command:
 
     `put /path/to/speed_controller.py /data/openpilot/data/selfdrive/speed_controller.py`.
 
