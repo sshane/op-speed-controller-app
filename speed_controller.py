@@ -1,16 +1,15 @@
 import sys
-live_speed_file = '/data/live_speed_file'
+live_speed_file = 'C:/Users/Shane/live_speed_file'
 
 def write_file(a):
     try:
-        speed = open(live_speed_file, "r")
-        modified_speed=float(speed.read())+a
-        speed.close()
-    except:
-        modified_speed=a
-    
-    with open(live_speed_file, 'w') as f:
-        f.write(str(modified_speed))
+        with open(live_speed_file, 'r') as speed:
+            modified_speed=float(speed.read())+a
+        with open(live_speed_file, 'w') as speed:
+            speed.write(str(modified_speed))
+    except: #in case file doesn't exist or is empty
+        with open(live_speed_file, 'w') as speed:
+            speed.write(str(28.0))
 
 if __name__ == "__main__":
     write_file(int(sys.argv[1]))
