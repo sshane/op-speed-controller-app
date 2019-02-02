@@ -1,5 +1,5 @@
 import sys
-live_speed_file = 'C:/Users/Shane/live_speed_file'
+live_speed_file = '/data/live_speed_file'
 
 def write_file(a):
     try:
