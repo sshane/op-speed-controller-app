@@ -67,7 +67,6 @@ public class ListenerService extends Service {
         mMediaPlayer.start();
     }
 
-
     public void startListener() {
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
