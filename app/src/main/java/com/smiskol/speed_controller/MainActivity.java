@@ -124,6 +124,8 @@ public class MainActivity extends AppCompatActivity {
         if (preferences.getBoolean("ghostRider", false)) {
             doGhostRider(); //play a little tune ;)
         }
+
+        new ListenerService().getActivityContext(MainActivity.this);
     }
 
     public void startListeners() {
@@ -355,7 +357,6 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Boolean result) {
             if (result) {
                 final Intent listenerService = new Intent(MainActivity.this, ListenerService.class);
-                new ListenerService().getActivityContext(MainActivity.this);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(listenerService);
                 } else {

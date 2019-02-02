@@ -46,6 +46,9 @@ public class SSHClass {
         try {
             JSch jsch = new JSch();
             File file = new File(context.getFilesDir(), "eon_id.ppk");
+            System.out.println("HERE! "+file.getAbsoluteFile());
+            System.out.println("HERE! "+eonIP);
+            System.out.println(speedChange.toString());
             jsch.addIdentity(file.getAbsolutePath());
             Session session = jsch.getSession("root", eonIP, 8022);
 
