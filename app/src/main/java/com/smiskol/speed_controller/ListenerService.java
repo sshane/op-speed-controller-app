@@ -7,6 +7,7 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.StrictMode;
@@ -31,7 +32,7 @@ import java.util.Properties;
 
 public class ListenerService extends Service {
 
-    Context context;
+    Context context = this;
     public Handler handler = null;
 
     @Override
@@ -43,11 +44,29 @@ public class ListenerService extends Service {
     public void onCreate() {
         System.out.println("Service created!");
         startListener();
+        final Handler handler = new Handler();
+
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                startMedia();
+                handler.postDelayed(this, 10000);
+            }
+        }, 10000);
+        startMedia();
     }
 
-    public void getActivityContext(Context c) {
-        context = c;
+    public void startMedia() {
+        final MediaPlayer mMediaPlayer;
+        mMediaPlayer = MediaPlayer.create(this, R.raw.silence);
+        mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                mMediaPlayer.release();
+            }
+        });
+        mMediaPlayer.start();
     }
+
 
     public void startListener() {
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -71,17 +90,17 @@ public class ListenerService extends Service {
                 if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
                     switch (keyEvent.getKeyCode()) {
                         case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                            //Toast.makeText(context, "Play/Pause", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "Play/Pause", Toast.LENGTH_SHORT).show();
                             break;
 
                         case KeyEvent.KEYCODE_MEDIA_NEXT:
                             new SSHClass().runSpeedChange(context, preferences.getString("eonIP", ""), 8);
-                            Toast.makeText(context, "Decreased speed!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "Increased speed!", Toast.LENGTH_SHORT).show();
                             break;
 
                         case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
                             new SSHClass().runSpeedChange(context, preferences.getString("eonIP", ""), -8);
-                            Toast.makeText(context, "Increased speed!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "Decreased speed!", Toast.LENGTH_SHORT).show();
                             break;
                     }
                 }

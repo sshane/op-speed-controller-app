@@ -67,6 +67,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity {
@@ -124,8 +125,6 @@ public class MainActivity extends AppCompatActivity {
         if (preferences.getBoolean("ghostRider", false)) {
             doGhostRider(); //play a little tune ;)
         }
-
-        new ListenerService().getActivityContext(MainActivity.this);
     }
 
     public void startListeners() {
@@ -423,18 +422,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public class RunSpeedChange extends AsyncTask<Integer, Void, Boolean> {
+    public class RunSpeedChange extends AsyncTask<Integer, Void, String[]> {
 
-        protected Boolean doInBackground(Integer... speedChange) {
-            return new SSHClass().runSpeedChange(MainActivity.this, ipEditText.getText().toString(), speedChange[0].intValue());
+        protected String[] doInBackground(Integer... speedChange) {
+            Boolean result = new SSHClass().runSpeedChange(MainActivity.this, ipEditText.getText().toString(), speedChange[0].intValue());
+            return new String[]{result.toString(), String.valueOf(speedChange[0].intValue())};
         }
 
-        protected void onPostExecute(Boolean result) {
-            if (!result) {
+        protected void onPostExecute(String... result) {
+            if (result[0].equals("false")) {
                 listenSwitch.setChecked(false);
                 makeSnackbar("Couldn't connect to EON! Perhaps wrong IP?");
             } else {
-                makeSnackbar("Successful!");
+                if (result[1].equals("8")) {
+                    makeSnackbar("Increased speed!");
+                }else{
+                    makeSnackbar("Decreased speed!");
+                }
             }
         }
     }
