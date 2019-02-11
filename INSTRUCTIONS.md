@@ -23,12 +23,12 @@
     
     ```python
     live_speed_file = '/data/live_speed_file'
-    
-    if cp.vl["PCM_CRUISE_2"]['SET_SPEED'] != speed_limit_prev:
-      speed_limit_prev = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
+
+    if cp.vl["PCM_CRUISE_2"]['SET_SPEED'] != self.speed_limit_prev:
+      self.speed_limit_prev = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
       self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
       with open(live_speed_file, 'w') as f:
-        f.write(str(speed_limit_prev))
+        f.write(str(self.speed_limit_prev))
     else:
       speed = open(live_speed_file, "r")
       self.v_cruise_pcm = float(speed.read())
@@ -45,11 +45,11 @@
 
         live_speed_file = '/data/live_speed_file'
 
-        if cp.vl["PCM_CRUISE_2"]['SET_SPEED'] != speed_limit_prev:
-          speed_limit_prev = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
+        if cp.vl["PCM_CRUISE_2"]['SET_SPEED'] != self.speed_limit_prev:
+          self.speed_limit_prev = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
           self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
           with open(live_speed_file, 'w') as f:
-            f.write(str(speed_limit_prev))
+            f.write(str(self.speed_limit_prev))
         else:
           speed = open(live_speed_file, "r")
           self.v_cruise_pcm = float(speed.read())
