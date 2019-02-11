@@ -691,10 +691,14 @@ public class MainActivity extends AppCompatActivity {
                         "live_speed_file = '/data/live_speed_file'\n" +
                         "\n" +
                         "def write_file(a):\n" +
-                        "    speed = open(live_speed_file, \"r\")\n" +
-                        "    modified_speed=float(speed.read())+a\n" +
-                        "    with open(live_speed_file, 'w') as f:\n" +
-                        "        f.write(str(modified_speed))\n" +
+                        "    try:\n" +
+                        "        with open(live_speed_file, 'r') as speed:\n" +
+                        "            modified_speed=float(speed.read())+a\n" +
+                        "        with open(live_speed_file, 'w') as speed:\n" +
+                        "            speed.write(str(modified_speed))\n" +
+                        "    except: #in case file doesn't exist or is empty\n" +
+                        "        with open(live_speed_file, 'w') as speed:\n" +
+                        "            speed.write(str(28.0))\n" +
                         "\n" +
                         "if __name__ == \"__main__\":\n" +
                         "    write_file(int(sys.argv[1]))";
