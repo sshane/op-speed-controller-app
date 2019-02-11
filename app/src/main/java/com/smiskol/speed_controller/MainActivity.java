@@ -306,36 +306,15 @@ public class MainActivity extends AppCompatActivity {
         if (alertTitle.getParent() != null) {
             ((ViewGroup) alertTitle.getParent()).removeView(alertTitle);
         }
-        alertTitle.setText("SAFETY WARNING!!");
+        alertTitle.setText("Warning");
         alertTitle.setVisibility(View.VISIBLE);
         alertTitle.setTypeface(semibold);
         AlertDialog successDialog = new AlertDialog.Builder(MainActivity.this).setCustomTitle(alertTitle)
-                .setMessage("Please note that it's best to initially set your cruise control to a high speed, then alter it with this app to your desired speed. Setting it too low, then increasing it with this app will cause unwanted cruise control behavior. Proceed at your own risk.")
-                .setPositiveButton("Sounds scary...", new DialogInterface.OnClickListener() {
+                .setMessage("Please note that it's best to initially set your cruise control to a high speed, then alter it with this app to your desired, lower, speed. Setting it low, then increasing it with this app will cause unwanted cruise control behavior. Proceed at your own risk.\nYou can always tap the cruise control stock up or down to reset the system if anything goes wrong!")
+                .setPositiveButton("Got it!", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if (alertTitle.getParent() != null) {
-                            ((ViewGroup) alertTitle.getParent()).removeView(alertTitle);
-                        }
-                        alertTitle.setText("Don't worry!");
-                        alertTitle.setVisibility(View.VISIBLE);
-                        alertTitle.setTypeface(semibold);
-                        AlertDialog successDialog = new AlertDialog.Builder(MainActivity.this).setCustomTitle(alertTitle)
-                                .setMessage("You won't die or anything. It's just a bug I'm working out. You can always reset the system by tapping up or down on the cruise control stalk if anything goes wrong.")
-                                .setPositiveButton("Will you go away now?", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        makeSnackbar("Absolutely " + ("\ud83d\udc4d"));
-                                        preferences.edit().putBoolean("warning", true).apply();
-                                    }
-                                })
-                                .setCancelable(false)
-                                .show();
-
-                        TextView tmpMessage = successDialog.getWindow().findViewById(android.R.id.message);
-                        Button tmpButton = successDialog.getWindow().findViewById(android.R.id.button1);
-                        tmpMessage.setTypeface(regular);
-                        tmpButton.setTypeface(semibold);
+                        preferences.edit().putBoolean("warning", true).apply();
                     }
                 })
                 .setCancelable(false)
