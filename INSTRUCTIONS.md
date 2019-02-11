@@ -34,7 +34,7 @@
       self.v_cruise_pcm = float(speed.read())
       ```
       
-      Finally, insert this line in the `CarState`'s `__init__` `function: self.speed_limit_prev = 0`
+      Finally, insert this line in the `CarState`'s `__init__` function: `self.speed_limit_prev = 0`
       
       Ensure the formatting is correct when you paste it, there should be no extra or missing indents. Then you simply `put` the file back with `sftp` and `reboot` with `ssh`. The full code section should look like this:
       
