@@ -23,18 +23,20 @@
     
     ```python
     live_speed_file = '/data/live_speed_file'
-    
-    if cp.vl["PCM_CRUISE_2"]['SET_SPEED'] != speed_limit_prev:
-      speed_limit_prev = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
+
+    if cp.vl["PCM_CRUISE_2"]['SET_SPEED'] != self.speed_limit_prev:
+      self.speed_limit_prev = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
       self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
       with open(live_speed_file, 'w') as f:
-        f.write(str(speed_limit_prev))
+        f.write(str(self.speed_limit_prev))
     else:
       speed = open(live_speed_file, "r")
       self.v_cruise_pcm = float(speed.read())
       ```
       
-      Ensure the formatting is correct when you paste it, there should be no extra or missing indents. Then you simply `put` the file back with `sftp` and `reboot` with `ssh`. The full code section should look like this:
+      Finally, insert this line in the `CarState` class's `__init__` function: `self.speed_limit_prev = 0`
+      
+      Ensure the formatting is correct when you paste it all, there should be no extra or missing indents (you might have to replace tabs with spaces to match openpilot's formatting). Then you simply `put` the file back with `sftp` and `reboot` with `ssh`. The full code section should look like this:
       
       ```python
         self.steer_torque_motor = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_EPS']
@@ -43,11 +45,11 @@
 
         live_speed_file = '/data/live_speed_file'
 
-        if cp.vl["PCM_CRUISE_2"]['SET_SPEED'] != speed_limit_prev:
-          speed_limit_prev = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
+        if cp.vl["PCM_CRUISE_2"]['SET_SPEED'] != self.speed_limit_prev:
+          self.speed_limit_prev = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
           self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
           with open(live_speed_file, 'w') as f:
-            f.write(str(speed_limit_prev))
+            f.write(str(self.speed_limit_prev))
         else:
           speed = open(live_speed_file, "r")
           self.v_cruise_pcm = float(speed.read())
@@ -57,8 +59,6 @@
         self.pcm_acc_active = bool(cp.vl["PCM_CRUISE"]['CRUISE_ACTIVE'])
         self.gas_pressed = not cp.vl["PCM_CRUISE"]['GAS_RELEASED']
     ```
-    
-    Finally, create the variable `speed_limit_prev` and set it to `0` above the `class CarState(object):` class and define it as a global variable in the `update` function above the code we pasted in.
     
     #### For Honda's, find the line `self.v_cruise_pcm = cp.vl["CRUISE"]['CRUISE_SPEED_PCM']`, which should be around line `296`, then use the same steps above, only replace `cp.vl["PCM_CRUISE_2"]['SET_SPEED']` with `cp.vl["CRUISE"]['CRUISE_SPEED_PCM']`. It should work all the same.
     
