@@ -30,8 +30,11 @@
       with open(live_speed_file, 'w') as f:
         f.write(str(self.speed_limit_prev))
     else:
-      speed = open(live_speed_file, "r")
-      self.v_cruise_pcm = float(speed.read())
+      try:
+        speed = open(live_speed_file, "r")
+        self.v_cruise_pcm = float(speed.read())
+      except: #if file doesn't exist
+        self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
       ```
       
       Finally, insert this line in the `CarState` class's `__init__` function: `self.speed_limit_prev = 0`
