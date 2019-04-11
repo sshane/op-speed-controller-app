@@ -65,4 +65,4 @@
     
     #### For Honda's, find the line `self.v_cruise_pcm = cp.vl["CRUISE"]['CRUISE_SPEED_PCM']`, which should be around line `296`, then use the same steps above, only replace `cp.vl["PCM_CRUISE_2"]['SET_SPEED']` with `cp.vl["CRUISE"]['CRUISE_SPEED_PCM']`. It should work all the same.
     
-Now you're ready to use the app to control your car's speed! Please contact me on Discord (Shane#6175) or email (shane@smiskol.com) if you are having trouble with these instructions, or you have a make other than Toyota and I will look into it!
+Now you're ready to use the app to control your car's speed! Please contact me on Discord (Shane Smiskol#6175) or email (shane@smiskol.com) if you are having trouble with these instructions, or you have a make other than Toyota and I will look into it!
